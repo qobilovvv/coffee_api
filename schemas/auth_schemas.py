@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from datetime import datetime
+
+from pydantic import BaseModel, Field, EmailStr
 
 from typing import Optional
 
@@ -19,3 +21,23 @@ class CreateUserSchema(BaseModel):
 class VerifyVerificationCodeSchema(BaseModel):
     email: str = Field(..., examples=["example@gmail.com"])
     code: str = Field(..., min_length=4, max_length=4)
+
+
+class UserResponseSchema(BaseModel):
+    id: int
+    email: EmailStr
+    first_name: str | None
+    last_name: str | None
+    role: str
+    is_verified: bool
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class UserUpdateSchema(BaseModel):
+    email: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    password: str | None = None

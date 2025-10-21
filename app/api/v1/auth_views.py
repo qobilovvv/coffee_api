@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.jwt import get_current_user
 from app.database.base import get_db
 from app.crud import auth_crud
 from schemas.auth_schemas import CreateUserSchema, VerifyVerificationCodeSchema, LoginSchema, CreateAdminSchema
@@ -23,3 +24,13 @@ async def verify_user(request: VerifyVerificationCodeSchema, db: AsyncSession = 
 @auth_router.post("/create-admin", summary="Create Admin API", description="Create admin api, we can delete it and use it's crud, inner function that creates admin")
 async def create_admin(request: CreateAdminSchema, db: AsyncSession = Depends(get_db)):
     return await auth_crud.create_admin(request, db)
+
+@auth_router.post("/me", summary="Get Me API", description="Get data about user")
+async def get_me(current_user = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "role": current_user.role
+    }

@@ -41,14 +41,15 @@ async def create_user(request: CreateUserSchema, db: AsyncSession):
     }
 
 async def create_admin(request: CreateAdminSchema, db: AsyncSession):
-    user = get_user_by_email(request.email, db)
+    user = await get_user_by_email(request.email, db)
     if user:
         raise HTTPException(detail="User already exists", status_code=400)
 
     new_user = Users(
         email=request.email,
         password=hash_password(request.password),
-        role="ADMIN"
+        role="ADMIN",
+        is_verified=True
     )
 
     db.add(new_user)
@@ -68,6 +69,9 @@ async def login_user(request: LoginSchema, db: AsyncSession):
 
     if not verify_password(request.password, user.password):
         raise HTTPException(detail="Invalid Credentials", status_code=400)
+
+    if not user.is_verified:
+        raise HTTPException(detail="User is not verified", status_code=403)
 
     payload = {
         "sub": str(user.id),
