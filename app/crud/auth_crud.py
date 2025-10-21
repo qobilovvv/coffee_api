@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.jwt import hash_password, verify_password, create_access_token, create_refresh_token
 from app.crud.common import get_user_by_email
 from app.models import Users
-from schemas.auth_schemas import CreateUserSchema, LoginSchema
+from schemas.auth_schemas import CreateUserSchema, LoginSchema, CreateAdminSchema
 
 
 # Create User function
@@ -39,6 +39,27 @@ async def create_user(request: CreateUserSchema, db: AsyncSession):
         "user_status": "not verified",
         "message": "Check your email, we sent verification code to it"
     }
+
+async def create_admin(request: CreateAdminSchema, db: AsyncSession):
+    user = get_user_by_email(request.email, db)
+    if user:
+        raise HTTPException(detail="User already exists", status_code=400)
+
+    new_user = Users(
+        email=request.email,
+        password=hash_password(request.password),
+        role="ADMIN"
+    )
+
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    return {
+        "email": new_user.email,
+        "role": new_user.role
+    }
+
 
 async def login_user(request: LoginSchema, db: AsyncSession):
     user = await get_user_by_email(request.email, db)

@@ -6,6 +6,10 @@ class LoginSchema(BaseModel):
     email: str = Field(..., examples=["example@gmail.com"])
     password: str
 
+class CreateAdminSchema(BaseModel):
+    email: str = Field(..., examples=["info@gmail.com"])
+    password: str
+
 class CreateUserSchema(BaseModel):
     email: str = Field(..., examples=["example@gmail.com"])
     first_name: Optional[str] = None

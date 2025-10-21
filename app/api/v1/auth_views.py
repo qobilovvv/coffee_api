@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.base import get_db
 from app.crud import auth_crud
-from schemas.auth_schemas import CreateUserSchema, VerifyVerificationCodeSchema, LoginSchema
+from schemas.auth_schemas import CreateUserSchema, VerifyVerificationCodeSchema, LoginSchema, CreateAdminSchema
 
 auth_router = APIRouter()
 
@@ -18,3 +18,8 @@ async def login(request: LoginSchema, db: AsyncSession = Depends(get_db)):
 @auth_router.post("/verify", summary="Verify User", description="Endpoint to verify user with sent code to the email.")
 async def verify_user(request: VerifyVerificationCodeSchema, db: AsyncSession = Depends(get_db)):
     return await auth_crud.verify_verification_code(request.code, request.email, db)
+
+# Create admin api, we can delete it and use it's crud, inner function that creates admin
+@auth_router.post("/create-admin", summary="Create Admin API", description="Create admin api, we can delete it and use it's crud, inner function that creates admin")
+async def create_admin(request: CreateAdminSchema, db: AsyncSession = Depends(get_db)):
+    return await auth_crud.create_admin(request, db)
