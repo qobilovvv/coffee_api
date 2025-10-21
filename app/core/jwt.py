@@ -82,54 +82,8 @@ async def get_current_user(
 
     return user
 
-async def get_user_from_payload(
-    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
-):
-    token = credentials.credentials
 
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        role = payload.get("role")
-        organization_id = payload.get("organization_id")
-
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: no user ID",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        return {
-            "id": user_id,
-            "role": role,
-            "organization_id": organization_id
-        }
-
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-async def get_admin_user(
-    user: Users = Depends(get_current_user),
-):
-    if getattr(user, "user_role_from_token", None) != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admins only",
-        )
-    return user
-
-
-def verify_token(token: str):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        exp = payload.get("exp")
-        if exp and datetime.utcnow().timestamp() > exp:
-            raise HTTPException(status_code=401, detail="Token expired")
-        return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+async def get_current_admin(current_user=Depends(get_current_user)):
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admins only")
+    return current_user

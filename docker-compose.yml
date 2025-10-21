@@ -17,7 +17,9 @@ services:
 
   web:
     build: .
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: >
+      sh -c "python -m app.database.init_db && uvicorn main:app --host 0.0.0.0 --port 8000"
+
     volumes:
       - .:/app
     environment:
