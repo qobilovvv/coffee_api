@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 class LoginSchema(BaseModel):
-    email: str
+    email: str = Field(..., examples=["example@gmail.com"])
     password: str
 
 class CreateUserSchema(BaseModel):

@@ -4,10 +4,10 @@ from random import randint
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.jwt import hash_password
+from app.core.jwt import hash_password, verify_password, create_access_token, create_refresh_token
 from app.crud.common import get_user_by_email
 from app.models import Users
-from schemas.auth_schemas import CreateUserSchema
+from schemas.auth_schemas import CreateUserSchema, LoginSchema
 
 
 # Create User function
@@ -40,6 +40,25 @@ async def create_user(request: CreateUserSchema, db: AsyncSession):
         "message": "Check your email, we sent verification code to it"
     }
 
+async def login_user(request: LoginSchema, db: AsyncSession):
+    user = await get_user_by_email(request.email, db)
+    if not user:
+        raise HTTPException(detail="No User Found", status_code=404)
+
+    if not verify_password(request.password, user.password):
+        raise HTTPException(detail="Invalid Credentials", status_code=400)
+
+    payload = {
+        "sub": str(user.id),
+        "role": str(user.role),
+    }
+
+    return {
+        "access_token": create_access_token(payload),
+        "refresh_token": create_refresh_token(payload),
+    }
+
+
 async def verify_verification_code(verification_code: str, email: str, db: AsyncSession):
     user = await get_user_by_email(email, db)
     # check if there is such user
@@ -53,7 +72,7 @@ async def verify_verification_code(verification_code: str, email: str, db: Async
     if user.verification_code != verification_code:
         raise HTTPException(detail="Invalid credentials", status_code=400)
     # checking isn't the code is expired
-    elapsed = datetime.now(timezone.utc) - user.verification_code_created_at
+    elapsed = datetime.now(timezone.utc) - (user.verification_code_created_at.replace(tzinfo=timezone.utc))
     if elapsed > timedelta(minutes=5):
         raise HTTPException(status_code=400, detail="Verification code expired")
 
