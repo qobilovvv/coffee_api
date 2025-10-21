@@ -12,6 +12,7 @@ def delete_unverified_users():
     asyncio.run(_delete_unverified_users_async())
 
 
+# deletes users who signed up, but not verified
 async def _delete_unverified_users_async():
     async with AsyncSessionLocal() as session:
         two_days_ago = datetime.now(timezone.utc) - timedelta(days=2)
